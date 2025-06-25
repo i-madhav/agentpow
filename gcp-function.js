@@ -114,3 +114,41 @@ export async function handleEmail(req, res) {
         res.status(500).send("Internal Server Error");
     }
 } 
+
+
+
+useEffect(() => {
+    if (availableUsersToAdd && availableUsersToAdd.length > 0) return;
+    const existingTeamMembers = object.team.member_uuids.concat(object.team.team_admin_uuids);
+
+    getActorUsers(object.team.actor_uuid, t)
+      .then((actorUsers) => {
+        let filteredUsers = actorUsers.filter(
+          (actoreUser) => !existingTeamMembers.includes(actoreUser.user.uuid)
+        );
+
+        if (object.team.department_uuid) {
+          console.log('this is object');
+          console.log(object);
+
+          console.log('This is team');
+          console.log(object.team);
+
+          console.log('I am running');
+          filteredUsers = filteredUsers.filter((actorUser) =>
+            actorUser.user.departments.some((dept) => dept.uuid === object.team.department_uuid)
+          );
+
+          console.log('This is filtered user');
+          console.log(filteredUsers);
+        }
+
+        setAvailableUsersToAdd(
+          filteredUsers.sort((a, b) => a.user.name.localeCompare(b.user.name))
+        );
+      })
+      .catch((err) => {
+        toast.error(t('toasts.generic-error', { errorMsg: err.message }));
+      })
+      .finally(() => setIsLoadingAvailableUsers(false));
+  }, [searchQuery]);
